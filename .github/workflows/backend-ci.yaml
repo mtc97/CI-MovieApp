@@ -1,0 +1,79 @@
+name: Backend Continous Integration
+
+# Runs on pull and manually form github
+on:
+  push:
+    branches: 
+      - main
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/virtualenvs
+          key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pipenv-
+
+      - name: Run Linter
+        run: |
+          cd starter/backend
+          pipenv install
+          pipenv run lint
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'      
+      
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/virtualenvs
+          key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pipenv-
+
+      - name: Run Tests
+        run: |
+          cd starter/backend
+          pipenv install
+          pipenv run test
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    if: ${{ success() }}
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/virtualenvs
+          key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pipenv-
+
+      - name: Build Docker Image
+        run: |
+          cd starter/backend
+          docker build --tag mp-backend:latest .
+          docker run -p 5000:5000 --name mp-backend -d mp-backend
