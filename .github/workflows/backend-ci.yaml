@@ -53,13 +53,13 @@ jobs:
         with:
           python-version: '3.10'
       
-      - name: Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.local/share/virtualenvs
-          key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pipenv-
+      #- name: Cache
+       # uses: actions/cache@v4
+        #with:
+         # path: ~/.local/share/virtualenvs
+          #key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
+          #restore-keys: |
+           # ${{ runner.os }}-pipenv-
 
       - name: Run Tests
         run: |
